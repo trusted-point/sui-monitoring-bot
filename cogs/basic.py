@@ -11,7 +11,6 @@ class Basic(commands.Cog):
         self.prometheus_parser = PrometheusParser(logger=logger)
         self.alerts_channel = config.bot.alerts_channel
         self.announcement_monitoring_channel = config.bot.announcement_monitoring_channel
-        self.enable_voice_calls = config.bot.enable_voice_calls
         self.users_to_ping = config.bot.users_to_ping
 
     @commands.Cog.listener()

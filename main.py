@@ -17,6 +17,7 @@ with open('config.yaml', 'r') as config_file:
 
 config = Config(**yaml_config)
 bot_token = get_bot_token()
+
 logger = setup_logger(log_level =  config.logs.level, enable_logs_save = config.logs.enable_log_save, log_file = config.logs.file, log_rotation_size = config.logs.rotation_size)
 
 class MyBot(commands.Bot):
@@ -72,8 +73,9 @@ class MyBot(commands.Bot):
 
     async def monitor_state_metrics(self):
         while not self.is_closed():
+            self.logger.info(f"Fetching metrics")
+
             try:
-                
                 async with AioHttpCalls(config=self.config, logger=self.logger) as session:
                     data = await session.fetch_prometheus_metrics()
 
@@ -81,6 +83,7 @@ class MyBot(commands.Bot):
                     self.alerts_thresholds['global_failed_attempts'] += 1
                     if self.alerts_thresholds['global_failed_attempts'] >= self.alerts_thresholds['max_global_attempts']:
                         await self.send_global_alert()
+                        self.logger.error(f"Validator is down. Metrics are not presented")
                         self.alerts_thresholds['global_failed_attempts'] = 0
 
                 else:
@@ -93,20 +96,23 @@ class MyBot(commands.Bot):
                     
                     for metric_name, metric_function in metric_functions.items():
                         current_metric_value = await metric_function(data)
-
                         if current_metric_value == 0 or current_metric_value - self.alerts_thresholds['metrics'][metric_name]['last_value'] < self.alerts_thresholds['metrics'][metric_name]['cahnge_rate']:
+                            self.logger.warn(f"Metric {metric_name} is not advancing. Adding stuck_attempt")
+
                             self.alerts_thresholds['metrics'][metric_name]['stuck_attempts'] += 1
                             if self.alerts_thresholds['metrics'][metric_name]['stuck_attempts'] >= self.alerts_thresholds['metrics'][metric_name]['max_stuck_attempts']:
+                                self.logger.warn(f"Stuck_attempt for {metric_name} reached")
+
                                 await self.send_metric_stuck_alert(metric_name=metric_name, metric_value=current_metric_value)
                                 self.alerts_thresholds['metrics'][metric_name]['stuck_attempts'] = 0
-
-                                self.logger.info(f"Alert: for {metric_name} sent")    
+                        else:
+                            self.logger.info(f"{metric_name} is okay")
 
                         self.alerts_thresholds['metrics'][metric_name]['last_value'] = current_metric_value
 
                 await asyncio.sleep(30)
             except Exception as e:
-                logger.error(f"An unexpected error occurred: {e}")    
+                self.logger.error(f"An unexpected error occurred: {e}")
 
     async def send_metric_stuck_alert(self, metric_name: str, metric_value):
         message_content = f"""
@@ -123,7 +129,7 @@ Fetch attempts: {self.alerts_thresholds['metrics'][metric_name]['max_stuck_attem
         alert_channel = self.get_channel(self.alert_channel_id)
         if alert_channel:
             await alert_channel.send(content=message_content)
-
+            self.logger.info(f"Sending {metric_name} alert")
         else:
             self.logger.error(f"Channel with ID {config.bot.gov_channel_id} not found.")
 
@@ -140,6 +146,7 @@ Fetch attempts: {self.alerts_thresholds['max_global_attempts']}
         alert_channel = self.get_channel(self.alert_channel_id)
         if alert_channel:
             await alert_channel.send(content=message_content)
+            self.logger.info(f"Sending global alert")
         else:
             self.logger.error(f"Channel with ID {config.bot.gov_channel_id} not found.")
 
