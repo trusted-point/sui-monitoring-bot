@@ -1,0 +1,39 @@
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore the virtual environment directory (if used)
+venv/
+
+# Ignore local configuration files
+bot_token.txt
+
+# Ignore logs and runtime data
+logs/
+*.log
+
+# Ignore user-specific IDE or editor settings
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln
+*.pyc
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore built distributions
+dist/
+build/
+*.egg-info/
+
+# Ignore Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Ignore any temporary files
+*.tmp
+*.bak
