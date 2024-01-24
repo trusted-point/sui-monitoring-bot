@@ -64,9 +64,7 @@ class MyBot(commands.Bot):
                     if cog_name in cog_params_mapping and all(param in setup_params for param in cog_params_mapping[cog_name]):
                         
                         await cog.setup(self, **cog_params_mapping[cog_name])
-                        print('\n------------------------------------------------------------------------')
                         logger.info(f"Cog {cog_name.upper()} has been loaded successfully")
-                        print('------------------------------------------------------------------------')
                     else:
                         logger.error(f"Error: Incorrect parameters for setup function in {cog_module}")
                         logger.error(f"Expected parameters: {setup_params}, Provided parameters: {cog_params_mapping[cog_name]}")
@@ -97,11 +95,11 @@ class MyBot(commands.Bot):
                     for metric_name, metric_function in metric_functions.items():
                         current_metric_value = await metric_function(data)
                         if current_metric_value == 0 or current_metric_value - self.alerts_thresholds['metrics'][metric_name]['last_value'] < self.alerts_thresholds['metrics'][metric_name]['cahnge_rate']:
-                            self.logger.warn(f"Metric {metric_name} is not advancing. Adding stuck_attempt")
+                            self.logger.warning(f"Metric {metric_name} is not advancing. Adding stuck_attempt")
 
                             self.alerts_thresholds['metrics'][metric_name]['stuck_attempts'] += 1
                             if self.alerts_thresholds['metrics'][metric_name]['stuck_attempts'] >= self.alerts_thresholds['metrics'][metric_name]['max_stuck_attempts']:
-                                self.logger.warn(f"Stuck_attempt for {metric_name} reached")
+                                self.logger.warning(f"Stuck_attempt for {metric_name} reached")
 
                                 await self.send_metric_stuck_alert(metric_name=metric_name, metric_value=current_metric_value)
                                 self.alerts_thresholds['metrics'][metric_name]['stuck_attempts'] = 0
@@ -168,7 +166,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         asyncio.run(bot.close())
-        print('\n------------------------------------------------------------------------')
         logger.info("Bot was stopped")
-        print('------------------------------------------------------------------------\n')
         exit()
