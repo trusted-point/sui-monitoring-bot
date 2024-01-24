@@ -12,4 +12,4 @@ bot:
   announcement_monitoring_channel: 1199674616998789150
 # METRICS SETTINGS
 validator:
-  prometheus_metrics_url: "http://sui-mainnet.testnet-pride.com:9184/metrics"
+  prometheus_metrics_url: "http://<IP/DOMAIN>:9184/metrics" # MAKE SURE TO CHECK FIREWALL SETTINGS
